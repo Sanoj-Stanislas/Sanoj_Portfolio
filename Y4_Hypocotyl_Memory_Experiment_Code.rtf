@@ -1,0 +1,1135 @@
+{\rtf1\ansi\ansicpg1252\deff0\nouicompat\deflang1033{\fonttbl{\f0\fnil\fcharset0 Courier New;}{\f1\fnil\fcharset0 Calibri;}}
+{\*\generator Riched20 10.0.22621}\viewkind4\uc1 
+\pard\f0\fs22\lang2057 #########################################\par
+##      Hypocotyl Length analysis      ##\par
+#########################################\par
+\par
+\par
+#### Data Naming convention ####\par
+# photo periods = c1 ..... c8\par
+# c1 = SD, c2 = LD, c3 = SD-LD, c4 = LD-SD\par
+# c5 = SD, c6 = ND, c7 = SD-ND, C8 = ND-SD\par
+\par
+# Days = d3, d4, d5, d6, 10\par
+# day 10 is names as just d8 so it could have 2 characters in its name\par
+\par
+# mutant lines = wt = WT, me = elf3, mp = phyB, dm = double mutant, elf3/phyB \par
+\par
+\par
+\par
+# Packages needed\par
+library(dplyr)\par
+library(rlist)\par
+library(tidyverse)\par
+library(ggpubr)\par
+\par
+## Setting Working Directory\par
+\par
+\par
+\par
+setwd("C:/Users/sanoj/Desktop/Bioinformatics & Data Science/R/R Project/exp13")\par
+#getting names of all the files\par
+all = list.files()\par
+#making a blank dictionary to hold all the data frames\par
+data = list()\par
+\par
+\par
+\par
+for (i in all) \{\par
+  \par
+  #saving i as a variable so the imported data can be renamed\par
+  a = print(i)\par
+  \par
+  #reading file\par
+  temp = read_csv(i)\par
+  \par
+  #change name of 10 in day column into d10\par
+  #day is the second charector in the naming convention\par
+  #10 is 2 charecter & d10 is 3 charecter\par
+  #10 occupies 4,5 charecter and d10 would occupy 4,5,6\par
+  \par
+  \par
+  #in the raw data file all the file needs to be choosen\par
+  #need to select the file names that s\par
+  \par
+  \par
+  \par
+  #extracting data from the file name\par
+  env <- substr(a, 1, 2)\par
+  day <- substr(a, 4, 5)\par
+  sample <- substr(a, 7, 8)\par
+  strain <- substr(a, 10,11)\par
+  \par
+  #making new columns and inserting data based the file name\par
+  temp$env <- env\par
+  temp$day <- day\par
+  temp$sample <- sample\par
+  temp$strain <- strain\par
+ \par
+  #adding file to a list for merging with "data"\par
+  list = list(temp)     \par
+  \par
+  #appending the data frame to the existing list of data frames\par
+  data = c(data, list)\par
+  \par
+\}\par
+\par
+\par
+#renaming the elements based on the files they are based on\par
+names(data) = all\par
+\par
+setwd("C:/Users/sanoj/Desktop/Bioinformatics & Data Science/R/R Project")\par
+\par
+# empty data frame\par
+columns = c("Length","env","day","sample","strain")\par
+df <- data.frame(matrix(ncol = length(columns), nrow = 0))\par
+colnames(df) = columns\par
+\par
+\par
+# for loop for rbind\par
+for (i in data) \{ \par
+  temp2 = i\par
+  temp3 = temp2[, c(7:11)]\par
+  df = rbind(df, temp3)\par
+\}\par
+save(df, file = "data_processed/dataComplete.RData")\par
+\par
+## Double checking for inserting everything\par
+b = 0\par
+for (i in data) \{\par
+  temp4 = i\par
+  a = nrow(temp4)\par
+  b = b + a \par
+\}\par
+\par
+# change columns into factors for stat test\par
+df$env <- as.factor(df$env)\par
+df$day <- as.factor(df$day)\par
+df$sample <- as.factor(df$sample)\par
+df$strain <- as.factor(df$strain)\par
+\par
+\par
+# separate the strain out of general df\par
+wt_df <- df[df$strain=="wt",]\par
+me_df <- df[df$strain=="me",]\par
+mp_df <- df[df$strain=="mp",]\par
+dm_df <- df[df$strain=="dm",]\par
+\par
+#ANOVA for WT on different days\par
+#compares all the conditions within a given day\par
+\par
+# wt anova\par
+for (day_i in c("d3","d4","d5","d6","d7","d8")) \{\par
+  wt_day_i_df <- wt_df[wt_df$day == day_i, ] \par
+  print(day_i)\par
+  \par
+  wt_d_aov <- aov(Length~env, wt_day_i_df)\par
+  \par
+  print(summary(wt_d_aov))\par
+\}\par
+\par
+# elf3 anova\par
+for (day_i in c("d3","d4","d5","d6","d7","d8")) \{\par
+  me_day_i_df <- me_df[me_df$day == day_i, ] \par
+  print(day_i)\par
+  \par
+  me_d_aov <- aov(Length~env, me_day_i_df)\par
+  \par
+  print(summary(me_d_aov))\par
+\}\par
+\par
+# phyB anova\par
+for (day_i in c("d3","d4","d5","d6","d7","d8")) \{\par
+  mp_day_i_df <- mp_df[mp_df$day == day_i, ] \par
+  print(day_i)\par
+  \par
+  mp_d_aov <- aov(Length~env, mp_day_i_df)\par
+  \par
+  print(summary(mp_d_aov))\par
+\}\par
+\par
+# elf3phyB anova\par
+for (day_i in c("d3","d4","d5","d6","d7","d8")) \{\par
+  dm_day_i_df <- dm_df[dm_df$day == day_i, ] \par
+  print(day_i)\par
+  \par
+  dm_d_aov <- aov(Length~env, dm_day_i_df)\par
+  \par
+  print(summary(dm_d_aov))\par
+\}\par
+\par
+\par
+\par
+# Compare means wt\par
+for (day_i in c("d3","d4","d5","d6","d7","d8")) \{\par
+ day_i_df <- wt_df[wt_df$day == day_i, ] \par
+ print(day_i)\par
+ \par
+ temp_d_aov <- aov(Length~env, day_i_df)\par
+ \par
+ print(summary(temp_d_aov))\par
+ comparison_list <- list(c("c1","c2"),c("c3","c4"))\par
+ wtcomp <- compare_means(Length~env, data = wt_day_i_df, method = "t.test",\par
+                         comparisons=comparison_list)\par
+ print(wtcomp)\par
+\}\par
+\par
+#compare means of elf3\par
+for (day_i in c("d3","d4","d5","d6","d7","d8")) \{\par
+  me_i_df <- me_df[me_df$day == day_i, ] \par
+  print(day_i)\par
+  \par
+  me_temp_d_aov <- aov(Length~env, day_i_df)\par
+  \par
+  print(summary(me_temp_d_aov))\par
+  comparison_list <- list(c("c1","c2"),c("c3","c4"))\par
+  me_comp <- compare_means(Length~env, data = me_day_i_df, method = "t.test",\par
+                          comparisons=comparison_list)\par
+  print(comp)\par
+\}\par
+\par
+\par
+# t-test between conditions on a given day in WT\par
+comparison_list <- list(c("c1","c3"),c("c2","c4"))\par
+wt_compare_means(Length~env, data = wt_df, method = "t.test", comparisons=comparison_list)\par
+\par
+# t-test between conditions on a given day in elf3\par
+me_comparison_list <- list(c("c1","c3"),c("c2","c4"))\par
+me_compare_means(Length~env, data = me_df, method = "t.test", comparisons=comparison_list)\par
+\par
+# t-test between conditions on a given day in phyB\par
+mp_comparison_list <- list(c("c1","c3"),c("c2","c4"))\par
+mp_compare_means(Length~env, data = mp_df, method = "t.test", comparisons=comparison_list)\par
+\par
+# t-test between conditions on a given day in elf3phyB\par
+dm_comparison_list <- list(c("c1","c3"),c("c2","c4"))\par
+df_compare_means(Length~env, data = dm_df, method = "t.test", comparisons=comparison_list)\par
+\par
+\par
+\par
+# wt anova\par
+for (day_i in c("d3","d4","d5","d6","d7","d8")) \{\par
+  wt_day_i_df <- wt_df[wt_df$day == day_i, ] \par
+  print(day_i)\par
+  \par
+  wt_d_mean <- mean(wt_day_i_df)\par
+  \par
+  print(summary(wt_d_mean))\par
+\}\par
+\par
+\par
+\par
+\par
+#####\par
+lnames = load(file = "data_processed/dataComplete.RData")\par
+\par
+\par
+\par
+\par
+library(dplyr) #provides the filter function. it works very similarly to subset (base r function) but is faster\par
+library(rlist)\par
+library(tidyverse)\par
+library(ggplot2)\par
+# for boxplots\par
+library(hrbrthemes)\par
+library(viridis)\par
+\par
+#====\par
+#subset data and plot\par
+#====\par
+filter_data <- function(dataset, column, data1) \{\par
+  empty <- data.frame(matrix(ncol = 0, nrow = 0))\par
+  \par
+  if (column == "env")\{\par
+    \par
+    for (i in data1)\{\par
+      \par
+      subset <- dataset %>%  filter(env == (i))\par
+      empty = rbind(empty,subset)\par
+      \par
+    \}\par
+    boxplot(Length ~ env, data = empty,col="#69b3a2")\par
+  \} else if (column == "day")\{\par
+    for (i in data1)\{\par
+      \par
+      subset <- dataset %>%  filter(day == (i))\par
+      empty=rbind(empty,subset)\par
+    \}\par
+    boxplot(Length ~ day, data = empty,col="#69b3a2")\par
+  \} else if (column == "sample")\{\par
+    for (i in data1)\{\par
+      \par
+      subset <- dataset %>%  filter(sample == (i))\par
+      empty=rbind(empty,subset)\par
+      \par
+    \}\par
+    boxplot(Length ~ sample, data = empty,col="#69b3a2")\par
+  \} else if (column == "strain")\{\par
+    for (i in data1)\{\par
+      \par
+      subset <- dataset %>%  filter(strain == (i))\par
+      empty=rbind(empty,subset)\par
+      \par
+    \} \par
+    boxplot(Length ~ strain, data = empty,col="#69b3a2")\par
+  \} else print("Error in column: column input does not exist")\par
+\}\par
+\par
+# data set = data\par
+# column = the column we are using to subset\par
+# data1 = values within the column that are being selected\par
+\par
+\par
+# create filter for the function\par
+#insert values into function\par
+\par
+#====\par
+# Box Plot\par
+#====\par
+\par
+lnames = load(file = "data_processed/dataComplete.RData")\par
+\par
+#=====\par
+# WT boxplots\par
+#=====\par
+pwt <- ggplot(data = subset(df, strain == "wt"), aes(x=day, y=Length, fill=env)) + \par
+  geom_boxplot() + ggtitle("A")\par
+print(pwt)\par
+## axis.text.x for x axis only\par
+black.bold.14.text <- element_text(face = "bold", color = "black", size = 14)\par
+\par
+#Change text style in title and X/Y axis labels\par
+black.bold.text <- element_text(face = "bold", color = "black")\par
+\par
+# plot modification\par
+pwt + labs(fill = "condition") + theme(legend.position="top") + scale_fill_discrete(name = "condition", labels = c("SD-SD", "LD-LD", "SD-LD", "LD-SD")) +\par
+  xlab("Day") + ylab("Hypocotyl length (cm)") + scale_x_discrete(breaks=c("d3","d4","d5", "d6", "d7", "d8"),\par
+                                                                 labels=c("3", "4", "5", "6", "7", "10")) + theme(axis.text = black.bold.14.text) + theme(title = black.bold.text, axis.title = black.bold.text) + theme(legend.text = element_text(size = 12))\par
+\par
+\par
+\par
+# One box per condition\par
+p1 <- ggplot(data = subset(df, strain == "wt"), aes(x=day, y=Length, fill=env)) + \par
+  geom_boxplot() +\par
+  facet_wrap(~env) + \par
+  theme(\par
+    strip.background = element_blank(),\par
+    strip.text.x = element_blank()\par
+  ) + ggtitle("Wild-type on different condition") + labs(fill = "condition") + theme(legend.position="top") + scale_fill_discrete(name = "condition", labels = c("SD-SD", "LD-LD", "SD-LD", "LD-SD")) +\par
+  xlab("Day") + ylab("Hypocotyl length (cm)") + scale_x_discrete(breaks=c("d3","d4","d5", "d6", "d7", "d8"), labels=c("3", "4", "5", "6", "7", "10")) + theme(axis.text = black.bold.14.text) + theme(title = black.bold.text, axis.title = black.bold.text) + theme(legend.text = element_text(size = 12)) \par
+plot(p1)\par
+\par
+# one box per days\par
+p2 <- ggplot(data = subset(df, strain == "wt"), aes(x=day, y=Length, fill=env)) + \par
+  geom_boxplot() +\par
+  facet_wrap(~day, scale="free") +\par
+  theme(\par
+    strip.background = element_blank(),\par
+    strip.text.x = element_blank()) + ggtitle("Wild-type on different days") + labs(fill = "condition") + theme(legend.position="top") + scale_fill_discrete(name = "condition", labels = c("SD-SD", "LD-LD", "SD-LD", "LD-SD")) +\par
+  xlab("Day") + ylab("Hypocotyl length (cm)") + scale_x_discrete(breaks=c("d3","d4","d5", "d6", "d7", "d8"), labels=c("3", "4", "5", "6", "7", "10")) + theme(axis.text = black.bold.14.text) + theme(title = black.bold.text, axis.title = black.bold.text) + theme(legend.text = element_text(size = 12)) \par
+plot(p2)\par
+\par
+# A means wild type under different condition and days\par
+\par
+#====\par
+# elf3 boxplots\par
+#====\par
+# grouped boxplot\par
+pme <- ggplot(data = subset(df, strain == "me"), aes(x=day, y=Length, fill=env)) + \par
+  geom_boxplot() + ggtitle("B")\par
+#  (B) "elf3 under different photoperiods and days"\par
+\par
+\par
+# A means wild type under different condition and days\par
+# print plot\par
+print(pme)\par
+\par
+\par
+## axis.text.x for x axis only\par
+black.bold.14.text <- element_text(face = "bold", color = "black", size = 14)\par
+\par
+#Change text style in title and X/Y axis labels\par
+black.bold.text <- element_text(face = "bold", color = "black")\par
+\par
+# plot modification\par
+pme + labs(fill = "condition") + theme(legend.position="top") + scale_fill_discrete(name = "condition", labels = c("SD-SD", "LD-LD", "SD-LD", "LD-SD")) +\par
+  xlab("Day") + ylab("Hypocotyl length (cm)") + scale_x_discrete(breaks=c("d3","d4","d5", "d6", "d7", "d8"),\par
+                                                                 labels=c("3", "4", "5", "6", "7", "10")) + theme(axis.text = black.bold.14.text) + theme(title = black.bold.text, axis.title = black.bold.text) + theme(legend.text = element_text(size = 12))\par
+\par
+\par
+\par
+# One box per condition\par
+p1 <- ggplot(data = subset(df, strain == "me"), aes(x=day, y=Length, fill=env)) + \par
+  geom_boxplot() +\par
+  facet_wrap(~env) + \par
+  theme(\par
+    strip.background = element_blank(),\par
+    strip.text.x = element_blank()\par
+  ) + ggtitle(" elf3 on different condition") + labs(fill = "condition") + theme(legend.position="top") + scale_fill_discrete(name = "condition", labels = c("SD-SD", "LD-LD", "SD-LD", "LD-SD")) +\par
+  xlab("Day") + ylab("Hypocotyl length (cm)") + scale_x_discrete(breaks=c("d3","d4","d5", "d6", "d7", "d8"), labels=c("3", "4", "5", "6", "7", "10")) + theme(axis.text = black.bold.14.text) + theme(title = black.bold.text, axis.title = black.bold.text) + theme(legend.text = element_text(size = 12)) \par
+plot(p1)\par
+\par
+# one box per days\par
+p2 <- ggplot(data = subset(df, strain == "me"), aes(x=day, y=Length, fill=env)) + \par
+  geom_boxplot() +\par
+  facet_wrap(~day, scale="free") + \par
+  theme(\par
+    strip.background = element_blank(),\par
+    strip.text.x = element_blank()) + ggtitle("elf3 on different days") + labs(fill = "condition") + theme(legend.position="top") + scale_fill_discrete(name = "condition", labels = c("SD-SD", "LD-LD", "SD-LD", "LD-SD")) +\par
+  xlab("Day") + ylab("Hypocotyl length (cm)") + scale_x_discrete(breaks=c("d3","d4","d5", "d6", "d7", "d8"), labels=c("3", "4", "5", "6", "7", "10")) + theme(axis.text = black.bold.14.text) + theme(title = black.bold.text, axis.title = black.bold.text) + theme(legend.text = element_text(size = 12)) \par
+plot(p2)\par
+\par
+#====\par
+# phyB boxplots\par
+#====\par
+# grouped boxplot\par
+pmp <- ggplot(data = subset(df, strain == "mp"), aes(x=day, y=Length, fill=env)) + \par
+  geom_boxplot() + ggtitle("C")\par
+\par
+#  (c) "PhyB under different photo periods and days"\par
+\par
+# print plot\par
+print(pmp)\par
+\par
+\par
+## axis.text.x for x axis only\par
+black.bold.14.text <- element_text(face = "bold", color = "black", size = 14)\par
+\par
+#Change text style in title and X/Y axis labels\par
+black.bold.text <- element_text(face = "bold", color = "black")\par
+\par
+# plot modification\par
+pmp + labs(fill = "condition") + theme(legend.position="top") + scale_fill_discrete(name = "condition", labels = c("SD-SD", "LD-LD", "SD-LD", "LD-SD")) +\par
+  xlab("Day") + ylab("Hypocotyl length (cm)") + scale_x_discrete(breaks=c("d3","d4","d5", "d6", "d7", "d8"),\par
+                                                                 labels=c("3", "4", "5", "6", "7", "10")) + theme(axis.text = black.bold.14.text) + theme(title = black.bold.text, axis.title = black.bold.text) + theme(legend.text = element_text(size = 12))\par
+\par
+# One box per condition\par
+p1 <- ggplot(data = subset(df, strain == "mp"), aes(x=day, y=Length, fill=env)) + \par
+  geom_boxplot() +\par
+  facet_wrap(~env) + \par
+  theme(\par
+    strip.background = element_blank(),\par
+    strip.text.x = element_blank()\par
+  ) + ggtitle(" phyB on different condition") + labs(fill = "condition") + theme(legend.position="top") + scale_fill_discrete(name = "condition", labels = c("SD-SD", "LD-LD", "SD-LD", "LD-SD")) +\par
+  xlab("Day") + ylab("Hypocotyl length (cm)") + scale_x_discrete(breaks=c("d3","d4","d5", "d6", "d7", "d8"), labels=c("3", "4", "5", "6", "7", "10")) + theme(axis.text = black.bold.14.text) + theme(title = black.bold.text, axis.title = black.bold.text) + theme(legend.text = element_text(size = 12)) \par
+plot(p1)\par
+# one box per days\par
+p2 <- ggplot(data = subset(df, strain == "mp"), aes(x=day, y=Length, fill=env)) + \par
+  geom_boxplot() +\par
+  facet_wrap(~day, scale="free") + \par
+  theme(\par
+    strip.background = element_blank(),\par
+    strip.text.x = element_blank()) + ggtitle("phyB on different days") + labs(fill = "condition") + theme(legend.position="top") + scale_fill_discrete(name = "condition", labels = c("SD-SD", "LD-LD", "SD-LD", "LD-SD")) +\par
+  xlab("Day") + ylab("Hypocotyl length (cm)") + scale_x_discrete(breaks=c("d3","d4","d5", "d6", "d7", "d8"), labels=c("3", "4", "5", "6", "7", "10")) + theme(axis.text = black.bold.14.text) + theme(title = black.bold.text, axis.title = black.bold.text) + theme(legend.text = element_text(size = 12)) \par
+plot(p2)\par
+\par
+\par
+#====\par
+# Double mutant boxplots\par
+#====\par
+# double mutant (elf3phyB) boxplots\par
+# grouped boxplot\par
+pdm <- ggplot(data = subset(df, strain == "dm"), aes(x=day, y=Length, fill=env)) + \par
+  geom_boxplot() + ggtitle("D")\par
+\par
+#  (D) "elf3PhyB under different photo periods and days"\par
+\par
+\par
+# A means wild type under different condition and days\par
+# print plot\par
+print(pdm)\par
+\par
+\par
+## axis.text.x for x axis only\par
+black.bold.14.text <- element_text(face = "bold", color = "black", size = 14)\par
+\par
+#Change text style in title and X/Y axis labels\par
+black.bold.text <- element_text(face = "bold", color = "black")\par
+\par
+# plot modification\par
+pdm + labs(fill = "condition") + theme(legend.position="top") + scale_fill_discrete(name = "condition", labels = c("SD-SD", "LD-LD", "SD-LD", "LD-SD")) +\par
+  xlab("Day") + ylab("Hypocotyl length (cm)") + scale_x_discrete(breaks=c("d3","d4","d5", "d6", "d7", "d8"),\par
+                                                                 labels=c("3", "4", "5", "6", "7", "10")) + theme(axis.text = black.bold.14.text) + theme(title = black.bold.text, axis.title = black.bold.text) + theme(legend.text = element_text(size = 12))\par
+\par
+\par
+# One box per condition\par
+p1 <- ggplot(data = subset(df, strain == "dm"), aes(x=day, y=Length, fill=env)) + \par
+  geom_boxplot() +\par
+  facet_wrap(~env) + \par
+  theme(\par
+    strip.background = element_blank(),\par
+    strip.text.x = element_blank()\par
+  ) + ggtitle(" elf3phyB on different condition") + labs(fill = "condition") + theme(legend.position="top") + scale_fill_discrete(name = "condition", labels = c("SD-SD", "LD-LD", "SD-LD", "LD-SD")) +\par
+  xlab("Day") + ylab("Hypocotyl length (cm)") + scale_x_discrete(breaks=c("d3","d4","d5", "d6", "d7", "d8"), labels=c("3", "4", "5", "6", "7", "10")) + theme(axis.text = black.bold.14.text) + theme(title = black.bold.text, axis.title = black.bold.text) + theme(legend.text = element_text(size = 12)) \par
+plot(p1)\par
+# one box per days\par
+p2 <- ggplot(data = subset(df, strain == "dm"), aes(x=day, y=Length, fill=env)) + \par
+  geom_boxplot() +\par
+  facet_wrap(~day, scale="free") + \par
+  theme(\par
+    strip.background = element_blank(),\par
+    strip.text.x = element_blank()) + ggtitle("elf3phyB on different days") + labs(fill = "condition") + theme(legend.position="top") + scale_fill_discrete(name = "condition", labels = c("SD-SD", "LD-LD", "SD-LD", "LD-SD")) +\par
+  xlab("Day") + ylab("Hypocotyl length (cm)") + scale_x_discrete(breaks=c("d3","d4","d5", "d6", "d7", "d8"), labels=c("3", "4", "5", "6", "7", "10")) + theme(axis.text = black.bold.14.text) + theme(title = black.bold.text, axis.title = black.bold.text) + theme(legend.text = element_text(size = 12)) \par
+plot(p2)\par
+#====\par
+\par
+\par
+#=======\par
+# Box plots for Sample comparison (To test Batch effect)\par
+#=======\par
+\par
+# grouped boxplot wt samples\par
+#====\par
+ggplot(data = subset(df, strain == "wt"), aes(x=day, y=Length, fill=sample)) + \par
+  geom_boxplot() + ggtitle("Wild-type sample comparison on different days")\par
+# One box per condition\par
+p1 <- ggplot(data = subset(df, strain == "wt"), aes(x=day, y=Length, fill=sample)) + \par
+  geom_boxplot() +\par
+  facet_wrap(~env) + ggtitle("Wild-type samples on different photoperiod conditions")\par
+# one box per days\par
+p2 <- ggplot(data = subset(df, strain == "wt"), aes(x=day, y=Length, fill=sample)) + \par
+  geom_boxplot() +\par
+  facet_wrap(~day, scale="free") + ggtitle("Wild-type samples on different days")\par
+\par
+plot(p1)\par
+plot(p2)\par
+# Grouped boxplots of elf3 samples\par
+#====\par
+# grouped boxplots of elf3 samples\par
+#====\par
+ggplot(data = subset(df, strain == "me"), aes(x=day, y=Length, fill=sample)) + \par
+  geom_boxplot() + ggtitle("elf3 samples under different and days")\par
+\par
+# One box per condition\par
+p1 <- ggplot(data = subset(df, strain == "me"), aes(x=day, y=Length, fill=sample)) + \par
+  geom_boxplot() +\par
+  facet_wrap(~env) + ggtitle("elf3 samples on different photoperiod conditions")\par
+# one box per days\par
+p2 <- ggplot(data = subset(df, strain == "me"), aes(x=day, y=Length, fill=sample)) + \par
+  geom_boxplot() +\par
+  facet_wrap(~day, scale="free") + ggtitle("elf3 samples on different days")\par
+\par
+plot(p1)\par
+plot(p2)\par
+#====\par
+# Grouped boxplots of PhyB samples \par
+#====\par
+ggplot(data = subset(df, strain == "mp"), aes(x=day, y=Length, fill=sample)) + \par
+  geom_boxplot() + ggtitle("phyB samples under different and days")\par
+\par
+# One box per condition\par
+p1 <- ggplot(data = subset(df, strain == "mp"), aes(x=day, y=Length, fill=sample)) + \par
+  geom_boxplot() +\par
+  facet_wrap(~env) + ggtitle("PhyB samples on different photoperiod conditions")\par
+# one box per days\par
+p2 <- ggplot(data = subset(df, strain == "mp"), aes(x=day, y=Length, fill=sample)) + \par
+  geom_boxplot() +\par
+  facet_wrap(~day, scale="free") + ggtitle("PhyB samples on different days")\par
+\par
+plot(p1)\par
+plot(p2)\par
+# Grouped boxplots of elf3PhyB samples \par
+#=====\par
+### Grouped Boxplots elf3phyb samples \par
+#####\par
+ggplot(data = subset(df, strain == "dm"), aes(x=day, y=Length, fill=sample)) + \par
+  geom_boxplot() + ggtitle("elf3phyB samples under different and days")\par
+\par
+# One box per condition\par
+p1 <- ggplot(data = subset(df, strain == "dm"), aes(x=day, y=Length, fill=sample)) + \par
+  geom_boxplot() +\par
+  facet_wrap(~env) + ggtitle("elf3PhyB samples on different photoperiod conditions")\par
+# one box per days\par
+p2 <- ggplot(data = subset(df, strain == "dm"), aes(x=day, y=Length, fill=sample)) + \par
+  geom_boxplot() +\par
+  facet_wrap(~day, scale="free") + ggtitle("elf3PhyB samples on different days")\par
+\par
+plot(p1)\par
+plot(p2)\par
+#====\par
+\par
+\par
+#====\par
+# Line Plot\par
+#====\par
+lnames = load(file = "data_processed/dataComplete.RData")\par
+\par
+list_env = c("c1","c2","c3","c4") \par
+list_day = c("d3","d4","d5","d6","d7","d8")\par
+list_strain = c("wt", "me", "mp", "dm")\par
+\par
+summary_data = list()\par
+\par
+for (i in list_env) \{\par
+  name_env = i\par
+  \par
+  columns = c("env","day","strain", "mean_length", "sd_length")\par
+  \par
+  for (x in list_day) \{\par
+    name_day = x\par
+    \par
+    for (y in list_strain) \{\par
+      name_strain = y\par
+      \par
+      \par
+      nan <- data.frame(matrix(ncol = length(columns), nrow = 0))\par
+      colnames(nan) = columns\par
+      \par
+      temp =  subset(df, env == i & day == x & strain == y)\par
+      mean = mean(temp$Length)\par
+      sd = sd(temp$Length)\par
+      \par
+      nan[1,1] = i\par
+      nan[1,2] = x\par
+      nan[1,3] = y\par
+      nan[1,4] = mean\par
+      nan[1,5] = sd\par
+      #####\par
+      #new_name_mean = paste("df",\par
+      #                 paste(name_env),\par
+      #                paste(name_day),\par
+      #                 paste(name_strain),\par
+      #                 "mean", sep="_")\par
+      \par
+      #new_name_sd = paste("df",\par
+      #                 paste(name_env),\par
+      #                 paste(name_day),\par
+      #                 paste(name_strain),\par
+      #                 "sd", sep="_")\par
+      \par
+      #assign(new_name_mean, temp_mean)\par
+      #assign(new_name_sd, temp_sd)\par
+      #####\par
+      \par
+      #adding file to a list for merging with "data"\par
+      list = list(nan)     \par
+      \par
+      #appending the data frame to the existing list of data frames\par
+      summary_data = c(summary_data, list)\par
+      \par
+    \}  \}  \}\par
+\par
+columns = c("env","day","strain", "mean_length", "sd_length")\par
+summary <- data.frame(matrix(ncol = length(columns), nrow = 0))\par
+colnames(summary) = columns\par
+\par
+for (i in summary_data) \{\par
+  summary = rbind(summary, i)\par
+\}\par
+\par
+\par
+\par
+lpwt <- ggplot(data = subset(summary, strain == "wt"), aes(x=day, y= mean_length, group=env, color =env)) + \par
+  geom_line() +\par
+  geom_pont() +\par
+ \par
+  #+geom_pointrange(aes(ymin=mean_length-sd_length, ymax=mean_length+sd_length))\par
+# means wild type under different condition and days\par
+\par
+print(lpwt)\par
+\par
+lpwt + labs(title="A", x="Days", y = "Mean hypocotyl length (cm)")+\par
+  theme_classic() +\par
+  scale_color_manual(values=c('#999999','#E69F00','#0000FF', '#00FF00'))\par
+\par
+\par
+# Hypocotyl elongation measurement \par
+hypo <- read.csv("SD day 4 sample1_WT.csv")\par
+colnames(hypo)\par
+dim(hypo)\par
+# check for factors always\par
+hypo[1,"Area"]+1  \par
+c(1:1)\par
+hypo17<-hypo[1:17,]\par
+# double check the rows when reloading\par
+hist(hypo17[,"Length"])\par
+# Check for data \par
+# vector with all names of the file, make a loop with \par
+file_hypcot<- c("LD day 3 sample1_elf3.csv","LD day 3 sample1_elf3_phyB.csv","LD day 3 sample1_phyB.csv",\par
+     "LD day 3 sample1_WT.csv","SD day 3 sample1_elf3.csv","SD day 3 sample1_elf3_phyB.csv","SD day 3 sample1_phyB.csv",\par
+     "SD day 3 sample1_WT.csv", "SD day 4 sample1_WT.csv")\par
+\par
+for (i in file_hypcot) \{\par
+  hypo <- read.csv(i)\par
+  hist(hypo[,"Length"])\par
+\}\par
+\par
+# make box plot \par
+hypolist<-lapply(file_hypcot, function(file)\{\par
+  hypo <- read.csv(file)\par
+  hypo[,"Length"]  \par
+\})\par
+length(hypolist)\par
+hypolist[[1]]\par
+file_hypcot\par
+names(hypolist)=file_hypcot\par
+boxplot(hypolist)\par
+\par
+# next week, make box plots, names shorter, add color, \par
+####### The shift plants are in SD and LD in in day 3####\par
+##SDWT\par
+\par
+# Clarify\par
+##paste('SDWT/SD day ',file_hycot)\par
+\par
+\par
+## All SD WT ##\par
+\par
+file_hypcot<- c("SD day 3 sample1_WT.csv", "SD day 4 sample1_WT.csv", "SD day 5 sample1_WT.csv", \par
+                "SD day 6 sample1_WT.csv", "SD day 7 sample1_WT.csv", "SD Day 10 S1 WT.csv")\par
+for (i in file_hypcot) \{\par
+  hypo <- read.csv(i)\par
+  hist(hypo[,"Length"])\par
+\}\par
+# make box plot \par
+hypolist<-lapply(file_hypcot, function(file)\{\par
+  hypo <- read.csv(file)\par
+  hypo[,"Length"]  \par
+\})\par
+length(hypolist)\par
+hypolist[[1]]\par
+file_hypcot\par
+\par
+boxplot(hypolist)\par
+\par
+names(hypolist)=file_hypcot\par
+\par
+## All SD elf3 ###\par
+\par
+file_hypcot<- c("SD day 3 sample1_elf3.csv", "SD day 4 sample1_elf3.csv",\par
+                "SD day 5 sample1_elf3.csv", \par
+                "SD day 6 sample1_elf3.csv", "SD day 7 sample1_elf3.csv", "SD Day 10 S1 elf3.csv")\par
+paste('SDWT/SD day ',file_hycot)\par
+for (i in file_hypcot) \{\par
+  hypo <- read.csv(i)\par
+  hist(hypo[,"Length"])\par
+\}\par
+# make box plot \par
+hypolist<-lapply(file_hypcot, function(file)\{\par
+  hypo <- read.csv(file)\par
+  hypo[,"Length"]  \par
+\})\par
+length(hypolist)\par
+hypolist[[1]]\par
+file_hypcot\par
+\par
+boxplot(hypolist)\par
+\par
+names(hypolist)=file_hypcot\par
+\par
+\par
+## All SD phyB ###\par
+\par
+file_hypcot<- c("SD day 3 sample1_phyB.csv", "SD day 4 sample1_phyB.csv",\par
+                "SD day 5 sample1_phyB.csv", \par
+                "SD day 6 sample1_phyB.csv", "SD day 7 sample1_phyB.csv", "SD Day 10 S1 phyB.csv")\par
+paste('SDWT/SD day ',file_hycot)\par
+for (i in file_hypcot) \{\par
+  hypo <- read.csv(i)\par
+  hist(hypo[,"Length"])\par
+\}\par
+# make box plot \par
+hypolist<-lapply(file_hypcot, function(file)\{\par
+  hypo <- read.csv(file)\par
+  hypo[,"Length"]  \par
+\})\par
+length(hypolist)\par
+hypolist[[1]]\par
+file_hypcot\par
+\par
+boxplot(hypolist)\par
+\par
+names(hypolist)=file_hypcot\par
+\par
+\par
+## All SD elf3+phyB ###\par
+\par
+file_hypcot<- c("SD day 3 sample1_elf3_phyB.csv", "SD day 4 sample1_elf3_phyB.csv",\par
+                "SD day 5 sample1_elf3_phyB.csv", \par
+                "SD day 6 sample1_elf3_phyB.csv", "SD day 7 sample1_elf3_phyB.csv", \par
+                "SD Day 10 S1 elf3_phyB.csv")\par
+paste('SDWT/SD day ',file_hycot)\par
+for (i in file_hypcot) \{\par
+  hypo <- read.csv(i)\par
+  hist(hypo[,"Length"])\par
+\}\par
+# make box plot \par
+hypolist<-lapply(file_hypcot, function(file)\{\par
+  hypo <- read.csv(file)\par
+  hypo[,"Length"]  \par
+\})\par
+length(hypolist)\par
+hypolist[[1]]\par
+file_hypcot\par
+\par
+boxplot(hypolist)\par
+\par
+names(hypolist)=file_hypcot\par
+\par
+\par
+\par
+## All LD WT ###\par
+\par
+file_hypcot<- c("LD day 3 sample1_WT.csv","LD day 4 sample1_WT.csv", \par
+                "LD day 5 sample1_WT.csv","LD day 6 sample 1_WT.csv", \par
+                "LD day 7 sample1_WT.csv","LD_D10_S1_WT.csv")\par
+for (i in file_hypcot) \{\par
+  hypo <- read.csv(i)\par
+  hist(hypo[,"Length"])\par
+\}\par
+# make box plot \par
+hypolist<-lapply(file_hypcot, function(file)\{\par
+  hypo <- read.csv(file)\par
+  hypo[,"Length"]  \par
+\})\par
+length(hypolist)\par
+hypolist[[1]]\par
+file_hypcot\par
+\par
+boxplot(hypolist)\par
+\par
+names(hypolist)=file_hypcot\par
+\par
+\par
+## All LD elf3 ###\par
+\par
+file_hypcot<- c("LD day 3 sample1_elf3.csv","LD day 4 sample1_elf3.csv", \par
+                "LD day 5 sample1_elf3.csv","LD day 6 sample 1_elf3.csv", \par
+                "LD day 7 sample1_elf3.csv","LD_D10_S1_elf3.csv")\par
+for (i in file_hypcot) \{\par
+  hypo <- read.csv(i)\par
+  hist(hypo[,"Length"])\par
+\}\par
+# make box plot \par
+hypolist<-lapply(file_hypcot, function(file)\{\par
+  hypo <- read.csv(file)\par
+  hypo[,"Length"]  \par
+\})\par
+length(hypolist)\par
+hypolist[[1]]\par
+file_hypcot\par
+\par
+boxplot(hypolist)\par
+\par
+names(hypolist)=file_hypcot\par
+\par
+\par
+## All LD phyB ###\par
+\par
+file_hypcot<- c("LD day 3 sample1_phyB.csv","LD day 4 sample1_phyB.csv", \par
+                "LD day 5 sample1_phyB.csv","LD day 6 sample 1_phyB.csv", \par
+                "LD day 7 sample1_phyB.csv","LD_D10_S1_phyB.csv")\par
+for (i in file_hypcot) \{\par
+  hypo <- read.csv(i)\par
+  hist(hypo[,"Length"])\par
+\}\par
+# make box plot \par
+hypolist<-lapply(file_hypcot, function(file)\{\par
+  hypo <- read.csv(file)\par
+  hypo[,"Length"]  \par
+\})\par
+length(hypolist)\par
+hypolist[[1]]\par
+file_hypcot\par
+\par
+boxplot(hypolist)\par
+\par
+names(hypolist)=file_hypcot\par
+\par
+\par
+## All LD elf3_phyB ###\par
+\par
+file_hypcot<- c("LD day 3 sample1_elf3_phyB.csv","LD day 4 sample1_elf3_phyB.csv", \par
+                "LD day 5 sample1_elf3_phyB.csv","LD day 6 sample 1_elf3_phyB.csv", \par
+                "LD day 7 sample1_elf3_phyB.csv","LD_D10_S1_elf3_phyB.csv")\par
+for (i in file_hypcot) \{\par
+  hypo <- read.csv(i)\par
+  hist(hypo[,"Length"])\par
+\}\par
+# make box plot \par
+hypolist<-lapply(file_hypcot, function(file)\{\par
+  hypo <- read.csv(file)\par
+  hypo[,"Length"]  \par
+\})\par
+length(hypolist)\par
+hypolist[[1]]\par
+file_hypcot\par
+\par
+boxplot(hypolist)\par
+\par
+names(hypolist)=file_hypcot\par
+\par
+\par
+## All SD-LD WT ###\par
+\par
+file_hypcot<- c("SD-LD day 4 sample1_WT.csv", \par
+                "SD-LD day 5 sample1_WT.csv","SD-LD day 6 sample 1_WT.csv", \par
+                "SD-LD day 7 sample1_WT.csv","SD-LD_D10_S1_WT.csv")\par
+for (i in file_hypcot) \{\par
+  hypo <- read.csv(i)\par
+  hist(hypo[,"Length"])\par
+\}\par
+# make box plot \par
+hypolist<-lapply(file_hypcot, function(file)\{\par
+  hypo <- read.csv(file)\par
+  hypo[,"Length"]  \par
+\})\par
+length(hypolist)\par
+hypolist[[1]]\par
+file_hypcot\par
+\par
+boxplot(hypolist)\par
+\par
+names(hypolist)=file_hypcot\par
+\par
+\par
+\par
+## All SD-LD elf3 ###\par
+\par
+file_hypcot<- c("SD-LD day 4 sample1_elf3.csv", \par
+                "SD-LD day 5 sample1_elf3.csv","SD-LD day 6 sample 1_elf3.csv", \par
+                "SD-LD day 7 sample1_elf3.csv","SD-LD_D10_S1_elf3.csv")\par
+for (i in file_hypcot) \{\par
+  hypo <- read.csv(i)\par
+  hist(hypo[,"Length"])\par
+\}\par
+# make box plot \par
+hypolist<-lapply(file_hypcot, function(file)\{\par
+  hypo <- read.csv(file)\par
+  hypo[,"Length"]  \par
+\})\par
+length(hypolist)\par
+hypolist[[1]]\par
+file_hypcot\par
+\par
+boxplot(hypolist)\par
+\par
+names(hypolist)=file_hypcot\par
+\par
+\par
+\par
+## All SD-LD phyB ###\par
+\par
+file_hypcot<- c("SD-LD day 4 sample1_phyB.csv", \par
+                "SD-LD day 5 sample1_phyB.csv","SD-LD day 6 sample 1_phyB.csv", \par
+                "SD-LD day 7 sample1_phyB.csv","SD-LD_D10_S1_phyB.csv")\par
+for (i in file_hypcot) \{\par
+  hypo <- read.csv(i)\par
+  hist(hypo[,"Length"])\par
+\}\par
+# make box plot \par
+hypolist<-lapply(file_hypcot, function(file)\{\par
+  hypo <- read.csv(file)\par
+  hypo[,"Length"]  \par
+\})\par
+length(hypolist)\par
+hypolist[[1]]\par
+file_hypcot\par
+\par
+boxplot(hypolist)\par
+\par
+names(hypolist)=file_hypcot\par
+\par
+## All SD-LD elf3 + phyB ###\par
+\par
+file_hypcot<- c("SD-LD day 4 sample1_elf3_phyB.csv", \par
+                "SD-LD day 5 sample1_elf3_phyB.csv","SD-LD day 6 sample 1_elf3_phyB.csv", \par
+                "SD-LD day 7 sample1_elf3_phyB.csv","SD-LD_D10_S1_elf3_phyB.csv")\par
+for (i in file_hypcot) \{\par
+  hypo <- read.csv(i)\par
+  hist(hypo[,"Length"])\par
+\}\par
+# make box plot \par
+hypolist<-lapply(file_hypcot, function(file)\{\par
+  hypo <- read.csv(file)\par
+  hypo[,"Length"]  \par
+\})\par
+length(hypolist)\par
+hypolist[[1]]\par
+file_hypcot\par
+\par
+boxplot(hypolist)\par
+\par
+names(hypolist)=file_hypcot\par
+\par
+\par
+## All LD-SD WT ###\par
+\par
+file_hypcot<- c("LD_SD day 4 sample1_WT.csv", \par
+                "LD-SD day 5 sample1_WT.csv","LD-SD day 6 sample 1_WT.csv", \par
+                "LD-SD day 7 sample1_WT.csv","LD-SD_D10_S1_WT.csv")\par
+for (i in file_hypcot) \{\par
+  hypo <- read.csv(i)\par
+  hist(hypo[,"Length"])\par
+\}\par
+# make box plot \par
+hypolist<-lapply(file_hypcot, function(file)\{\par
+  hypo <- read.csv(file)\par
+  hypo[,"Length"]  \par
+\})\par
+length(hypolist)\par
+hypolist[[1]]\par
+file_hypcot\par
+\par
+boxplot(hypolist)\par
+\par
+names(hypolist)=file_hypcot\par
+\par
+\par
+## All LD-SD elf3 ###\par
+\par
+file_hypcot<- c("LD_SD day 4 sample1_elf3.csv", \par
+                "LD-SD day 5 sample1_elf3.csv","LD-SD day 6 sample 1_elf3.csv", \par
+                "LD-SD day 7 sample1_elf3.csv","LD-SD_D10_S1_elf3.csv")\par
+for (i in file_hypcot) \{\par
+  hypo <- read.csv(i)\par
+  hist(hypo[,"Length"])\par
+\}\par
+# make box plot \par
+hypolist<-lapply(file_hypcot, function(file)\{\par
+  hypo <- read.csv(file)\par
+  hypo[,"Length"]  \par
+\})\par
+length(hypolist)\par
+hypolist[[1]]\par
+file_hypcot\par
+\par
+boxplot(hypolist)\par
+\par
+names(hypolist)=file_hypcot\par
+\par
+## All LD-SD elf3 + phyB ###\par
+\par
+file_hypcot<- c("LD-SD day 4 sample1_elf3_phyB.csv", \par
+                "LD-SD day 5 sample1_elf3_phyB.csv","LD-SD day 6 sample 1_elf3_phyB.csv", \par
+                "LD-SD day 7 sample1_elf3_phyB.csv","LD-SD_D10_S1_elf3_phyB.csv")\par
+for (i in file_hypcot) \{\par
+  hypo <- read.csv(i)\par
+  hist(hypo[,"Length"])\par
+\}\par
+# make box plot \par
+hypolist<-lapply(file_hypcot, function(file)\{\par
+  hypo <- read.csv(file)\par
+  hypo[,"Length"]  \par
+\})\par
+length(hypolist)\par
+hypolist[[1]]\par
+file_hypcot\par
+\par
+boxplot(hypolist)\par
+\par
+names(hypolist)=file_hypcot\par
+\par
+### day 3 SD vs LD\par
+\par
+file_hypcot<- c("LD day 3 sample1_WT.csv","SD day 3 sample1_WT.csv",\par
+                "LD day 3 sample1_elf3.csv","SD day 3 sample1_elf3.csv",\par
+                "LD day 3 sample1_phyB.csv","SD day 3 sample1_phyB.csv",\par
+                "LD day 3 sample1_elf3_phyB.csv","SD day 3 sample1_elf3_phyB.csv")\par
+for (i in file_hypcot) \{\par
+  hypo <- read.csv(i)\par
+  hist(hypo[,"Length"])\par
+\}\par
+# make box plot \par
+hypolist<-lapply(file_hypcot, function(file)\{\par
+  hypo <- read.csv(file)\par
+  hypo[,"Length"]  \par
+\})\par
+length(hypolist)\par
+hypolist[[1]]\par
+file_hypcot\par
+\par
+boxplot(hypolist)\par
+\par
+names(hypolist)=file_hypcot\par
+\par
+\par
+### day 3 SD vs LD -- ver 2.0\par
+\par
+file_hypcot<- c("SD day 3 sample1_WT.csv","SD day 3 sample1_elf3.csv",\par
+               "SD day 3 sample1_phyB.csv","SD day 3 sample1_elf3_phyB.csv",\par
+               "LD day 3 sample1_WT.csv","LD day 3 sample1_elf3.csv",\par
+               "LD day 3 sample1_phyB.csv","LD day 3 sample1_elf3_phyB.csv")\par
+for (i in file_hypcot) \{\par
+  hypo <- read.csv(i)\par
+  hist(hypo[,"Length"])\par
+\}\par
+# make box plot \par
+hypolist<-lapply(file_hypcot, function(file)\{\par
+  hypo <- read.csv(file)\par
+  hypo[,"Length"]  \par
+\})\par
+length(hypolist)\par
+hypolist[[1]]\par
+file_hypcot\par
+\par
+boxplot(hypolist, at=c(3,4,5,6,7,10))\par
+\par
+names(hypolist)=file_hypcot\par
+\par
+\par
+## All LD-SD elf3 + phyB ###\par
+\par
+file_hypcot<- c("LD-SD day 4 sample1_elf3_phyB.csv", \par
+                "LD-SD day 5 sample1_elf3_phyB.csv","LD-SD day 6 sample 1_elf3_phyB.csv", \par
+                "LD-SD day 7 sample1_elf3_phyB.csv","LD-SD_D10_S1_elf3_phyB.csv")\par
+for (i in file_hypcot) \{\par
+  hypo <- read.csv(i)\par
+  hist(hypo[,"Length"])\par
+\}\par
+# make box plot \par
+hypolist<-lapply(file_hypcot, function(file)\{\par
+  hypo <- read.csv(file)\par
+  hypo[,"Length"]  \par
+\})\par
+length(hypolist)\par
+hypolist[[1]]\par
+file_hypcot\par
+names(hypolist)= paste(c(4,5,6,7,10))\par
+\par
+\par
+boxplot(hypolist, at=c(4,5,6,7,10))\par
+\par
+\par
+\par
+hyplist = list.files()\par
+print(hyplist)\par
+for (i in hyplist)  \{\par
+  a = print(i)\par
+  hyp <- read.csv(i)\par
+  hist(hyp[,"Length"])\par
+  assign(a,hyp) \par
+\}\par
+\par
+\par
+?lmer\par
+?list.files\par
+?list\par
+?length\par
+\par
+# Research analysis trouble shooting \par
+setwd("C:/Users/sanoj/Desktop/Bioinformatics & Data Science/R/R Project/troubleshoot")\par
+# library\par
+library(ggplot2)\par
+library(gridExtra)\par
+\par
+\par
+\par
+# A really basic boxplot.\par
+ggplot(convergence_test, aes(x=as.factor("ABCD"))) + \par
+  geom_boxplot(fill="slateblue", alpha=0.2) + \par
+  xlab("Trials")\par
+\par
+\par
+\par
+ts <- master_lenght_file\par
+# basic scatterplot\par
+ggplot(ts, aes(x=c1_d3_s1_wt_t1, y=c1_d3_s1_wt_t2)) + \par
+  geom_point()\par
+# scatterplot\par
+plot(x=ts$c1_d3_s1_wt_t1, y=ts$c1_d3_s1_wt_t2)\par
+\par
+
+\pard\sa200\sl276\slmult1\f1\lang9\par
+}
+ 
